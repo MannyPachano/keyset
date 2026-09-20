@@ -175,7 +175,15 @@ body {
   font: inherit; font-family: var(--mono); font-size: 0.8125rem; font-weight: 600;
   color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer;
   text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px;
+  /* WCAG 2.2 puts the floor for a target at 24 by 24. The text alone is 20
+     high, so the box is grown rather than the type. */
+  display: inline-flex; align-items: center; min-height: 24px;
 }
+
+/* Same rule, and the reason a 16px checkbox is not good enough even though it
+   is what the browser draws by default. */
+.table input[type='checkbox'],
+.board input[type='checkbox'] { width: 24px; height: 24px; margin: 0; accent-color: var(--accent); }
 .ref-link:hover { color: var(--accent-hover); }
 .cell-strong { display: block; font-weight: 600; color: var(--text); }
 .cell-sub { display: block; font-size: 0.8125rem; color: var(--text-faint); }
@@ -253,6 +261,20 @@ body {
   .sla { margin-left: 0; }
   .filters-clear { margin-left: 0; }
   .bulkbar-actions { margin-left: 0; width: 100%; }
+
+  /* On a phone the density that works with a mouse stops being reachable with
+     a thumb. 44px is the size a finger actually needs; the desktop layout keeps
+     its tighter spacing. */
+  .topbar { flex-wrap: wrap; padding: 0.625rem 0.75rem; }
+  .viewtab, .chip, .btn, .board-grip { min-height: 44px; }
+  .btn-icon, .board-grip { min-width: 44px; }
+  .ref-link { min-height: 44px; }
+
+  /* Selecting several requests is the one thing done over and over on a phone,
+     so the checkbox gets more than the 24px minimum. Not the full 44: at that
+     size it dominates a card, and unlike a lone button it sits inside content
+     that is already easy to hit. */
+  .table input[type='checkbox'] { width: 32px; height: 32px; }
 }
 
 /* ---------- view tabs ---------- */
@@ -334,7 +356,20 @@ body {
 }
 .board-card:hover { border-color: var(--line-strong); }
 .board-card.is-grabbed { border-color: var(--accent); background: var(--accent-soft); box-shadow: var(--shadow-md); cursor: grabbing; }
-.board-card-top { display: flex; align-items: center; justify-content: space-between; gap: 0.35rem; flex-wrap: wrap; }
+.board-card-top { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+
+/* The card used to be a button containing a button, which is invalid: a screen
+   reader cannot reach the inner one. Moving the drag action onto its own handle
+   gives each of the two things you can do to a card its own name. */
+.board-grip {
+  margin-left: auto; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; padding: 0; border: 0; border-radius: var(--radius-sm);
+  background: transparent; color: var(--text-faint); cursor: grab;
+}
+.board-grip:hover { background: var(--neutral-soft); color: var(--text); }
+.board-grip[aria-pressed='true'] { background: var(--accent-soft); color: var(--accent); cursor: grabbing; }
+.board-grip:disabled { opacity: 0.5; cursor: default; }
 /* A reference is one token. Breaking "MR-1072" across two lines makes it
    unreadable and unsearchable by eye. */
 .board-card .ref-link { white-space: nowrap; }

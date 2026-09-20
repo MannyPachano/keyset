@@ -71,11 +71,12 @@ test('the week board moves a visit with the keyboard alone', async ({ page }) =>
   await expect(page).toHaveURL(/view=week/);
 
   const card = page.locator('.board-card').first();
-  await card.focus();
   const ref = await card.locator('.ref-link').innerText();
+  const grip = card.locator('.board-grip');
+  await grip.focus();
 
   await page.keyboard.press('Enter');
-  await expect(card).toHaveAttribute('aria-grabbed', 'true');
+  await expect(grip).toHaveAttribute('aria-pressed', 'true');
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Enter');
 

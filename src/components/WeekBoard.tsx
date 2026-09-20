@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type DragEvent, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState, type DragEvent, type KeyboardEvent } from 'react';
 import { addDays, groupByDay, isoDay, startOfWeek, weekDays } from '../lib/dates.js';
 import { applyFilters, type Row } from '../lib/query.js';
 import type { Filters } from '../lib/types.js';
@@ -28,6 +28,7 @@ export function WeekBoard({ rows, filters, now, busy, onMove, onOpen }: Props) {
      keys move it between days, Space or Enter drops it, Escape puts it back.
      Drag alone is unusable without a mouse, and a board where the only way to
      reschedule is dragging excludes people for no reason. */
+  const hintId = useId();
   const [grabbed, setGrabbed] = useState<{ id: string; from: string; target: string } | null>(null);
   const [message, setMessage] = useState('');
 
@@ -136,17 +137,28 @@ export function WeekBoard({ rows, filters, now, busy, onMove, onOpen }: Props) {
                         <div
                           className={`board-card${isGrabbed ? ' is-grabbed' : ''}`}
                           draggable={!busy}
-                          tabIndex={0}
-                          role="button"
-                          aria-roledescription="Draggable visit. Press Enter to pick it up."
-                          aria-grabbed={isGrabbed || undefined}
                           onDragStart={(e: DragEvent) => e.dataTransfer.setData('text/plain', req.id)}
-                          onKeyDown={(e) => onCardKey(e, req.id, day)}
                           onDoubleClick={() => onOpen(req.id)}
                         >
                           <div className="board-card-top">
                             <button type="button" className="ref-link" data-ref-for={req.id} onClick={() => onOpen(req.id)}>{req.ref}</button>
                             <PriorityPill priority={req.priority} />
+                            <button
+                              type="button"
+                              className="board-grip"
+                              disabled={busy}
+                              aria-label={`Move ${req.ref} to another day`}
+                              aria-roledescription="Move handle"
+                              aria-pressed={isGrabbed}
+                              aria-describedby={hintId}
+                              onKeyDown={(e) => onCardKey(e, req.id, day)}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" />
+                                <circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" />
+                                <circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" />
+                              </svg>
+                            </button>
                           </div>
                           <p className="board-card-title">{req.title}</p>
                           <p className="board-card-sub">
@@ -164,6 +176,10 @@ export function WeekBoard({ rows, filters, now, busy, onMove, onOpen }: Props) {
         </div>
       )}
 
+      <p id={hintId} className="visually-hidden">
+        Press Enter to pick this visit up, then the left and right arrow keys to
+        choose a day, Enter to drop it, or Escape to put it back.
+      </p>
       <p className="visually-hidden" role="status" aria-live="assertive">{message}</p>
     </div>
   );

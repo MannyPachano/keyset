@@ -29,8 +29,9 @@ function describe(results: { violations: any[] }): string {
   if (!results.violations.length) return '';
   return results.violations
     .map((v) => {
-      const where = v.nodes.slice(0, 5).map((n: any) => `      ${n.target.join(' ')}`).join('\n');
-      return `  ${v.id} [${v.impact}] ${v.help}\n${where}`;
+      const where = v.nodes.slice(0, 12).map((n: any) => `      ${n.target.join(' ')}`).join('\n');
+      const more = v.nodes.length > 12 ? `\n      ...and ${v.nodes.length - 12} more` : '';
+      return `  ${v.id} [${v.impact}] ${v.help}  (${v.nodes.length} element${v.nodes.length === 1 ? '' : 's'})\n${where}${more}`;
     })
     .join('\n\n');
 }

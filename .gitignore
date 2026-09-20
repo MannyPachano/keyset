@@ -11,3 +11,4 @@ test-results
 # local test output and incremental build caches, not committed
 vitest-out.txt
 *.tsbuildinfo
+lighthouse*.report.*

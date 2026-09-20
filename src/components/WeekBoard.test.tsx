@@ -30,6 +30,10 @@ function setup(over: Partial<Parameters<typeof WeekBoard>[0]> = {}) {
   return { props, ...render(<WeekBoard {...props} />) };
 }
 
+/* Moving a visit is done from the card's own handle, not the card. The card
+   holds a link to the request, and a control cannot contain another control. */
+const handle = (ref: string) => screen.getByRole('button', { name: `Move ${ref} to another day` });
+
 describe('WeekBoard', () => {
   it('always shows seven days, including the empty ones', () => {
     setup();
@@ -58,11 +62,11 @@ describe('WeekBoard', () => {
   it('moves a card with the keyboard: pick up, choose a day, drop', async () => {
     const user = userEvent.setup();
     const { props } = setup();
-    const card = screen.getByText('MR-2001').closest('.board-card') as HTMLElement;
+    const grip = handle('MR-2001');
 
-    card.focus();
+    grip.focus();
     await user.keyboard('{Enter}');
-    expect(card).toHaveAttribute('aria-grabbed', 'true');
+    expect(grip).toHaveAttribute('aria-pressed', 'true');
 
     await user.keyboard('{ArrowRight}');
     await user.keyboard('{Enter}');
@@ -74,23 +78,21 @@ describe('WeekBoard', () => {
   it('puts a card back on Escape without moving it', async () => {
     const user = userEvent.setup();
     const { props } = setup();
-    const card = screen.getByText('MR-2002').closest('.board-card') as HTMLElement;
+    const grip = handle('MR-2002');
 
-    card.focus();
+    grip.focus();
     await user.keyboard('{Enter}');
     await user.keyboard('{ArrowRight}{ArrowRight}');
     await user.keyboard('{Escape}');
 
     expect(props.onMove).not.toHaveBeenCalled();
-    expect(card).not.toHaveAttribute('aria-grabbed', 'true');
+    expect(grip).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('does not report a move when the card is dropped where it started', async () => {
     const user = userEvent.setup();
     const { props } = setup();
-    const card = screen.getByText('MR-2001').closest('.board-card') as HTMLElement;
-
-    card.focus();
+    handle('MR-2001').focus();
     await user.keyboard('{Enter}{Enter}');
     expect(props.onMove).not.toHaveBeenCalled();
   });
@@ -98,9 +100,7 @@ describe('WeekBoard', () => {
   it('will not walk a card off either end of the week', async () => {
     const user = userEvent.setup();
     const { props } = setup();
-    const card = screen.getByText('MR-2003').closest('.board-card') as HTMLElement;
-
-    card.focus();
+    handle('MR-2003').focus();
     await user.keyboard('{Enter}');
     await user.keyboard('{ArrowRight}{ArrowRight}{ArrowRight}{ArrowRight}{ArrowRight}');
     await user.keyboard('{Enter}');
@@ -112,8 +112,7 @@ describe('WeekBoard', () => {
   it('announces where the card is heading as it moves', async () => {
     const user = userEvent.setup();
     setup();
-    const card = screen.getByText('MR-2001').closest('.board-card') as HTMLElement;
-    card.focus();
+    handle('MR-2001').focus();
     await user.keyboard('{Enter}');
 
     const live = document.querySelector('[aria-live="assertive"]') as HTMLElement;
@@ -122,12 +121,20 @@ describe('WeekBoard', () => {
     expect(live).toHaveTextContent(/already booked/);
   });
 
-  it('tells a screen reader what each card is and how to move it', () => {
+  it('gives the move action its own control rather than nesting one button in another', () => {
     setup();
     const card = screen.getByText('MR-2001').closest('.board-card') as HTMLElement;
-    expect(card).toHaveAttribute('role', 'button');
-    expect(card).toHaveAttribute('aria-roledescription', expect.stringContaining('Press Enter'));
-    expect(card).toHaveAttribute('tabindex', '0');
+
+    /* The card was a button wrapping the reference button. Nesting two controls
+       is invalid and leaves the inner one unreachable to a screen reader, so
+       the card is plain now and the drag lives on a handle of its own. */
+    expect(card).not.toHaveAttribute('role', 'button');
+    expect(card).not.toHaveAttribute('tabindex');
+
+    const grip = handle('MR-2001');
+    expect(grip).toHaveAttribute('aria-roledescription', 'Move handle');
+    expect(grip).toHaveAttribute('aria-pressed', 'false');
+    expect(grip).toHaveAccessibleDescription(/arrow keys/i);
   });
 
   it('opens a request from the card without moving it', async () => {
