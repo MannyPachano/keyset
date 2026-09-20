@@ -5,7 +5,7 @@ import type { Dataset, MaintenanceRequest, Priority, RequestEvent, Status } from
  *  them back exactly, rather than refetching and hoping. */
 export interface PendingMutation {
   id: string;
-  kind: 'status' | 'priority' | 'assign' | 'schedule';
+  kind: 'status' | 'priority' | 'assign' | 'schedule' | 'note';
   requestIds: string[];
   previous: MaintenanceRequest[];
   label: string;
@@ -146,6 +146,10 @@ export const mutations = {
   assign: (contractorId: string | null, name: string, by: string, at: string) => (r: MaintenanceRequest): MaintenanceRequest => ({
     ...r, contractorId, updatedAt: at,
     events: [...r.events, event(r, contractorId ? 'assigned' : 'unassigned', by, at, contractorId ? name : undefined)],
+  }),
+  note: (text: string, by: string, at: string) => (r: MaintenanceRequest): MaintenanceRequest => ({
+    ...r, updatedAt: at,
+    events: [...r.events, event(r, 'note', by, at, text)],
   }),
   schedule: (day: string | null, by: string, at: string) => (r: MaintenanceRequest): MaintenanceRequest => ({
     ...r, scheduledFor: day, updatedAt: at,

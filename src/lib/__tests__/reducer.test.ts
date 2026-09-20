@@ -206,3 +206,18 @@ describe('mutation builders', () => {
     assert.equal(JSON.stringify(before), snapshot);
   });
 });
+
+describe('notes', () => {
+  it('adds a timeline entry without changing any field', () => {
+    const before = make({ id: 'a', status: 'triaged', priority: 'urgent', contractorId: 'c1' });
+    const after = mutations.note('Tenant says it is worse this morning.', 'Dana', AT)(before);
+    assert.equal(after.status, before.status);
+    assert.equal(after.priority, before.priority);
+    assert.equal(after.contractorId, before.contractorId);
+    assert.equal(after.scheduledFor, before.scheduledFor);
+    assert.equal(after.events.length, before.events.length + 1);
+    assert.equal(after.events.at(-1)!.kind, 'note');
+    assert.equal(after.events.at(-1)!.note, 'Tenant says it is worse this morning.');
+    assert.equal(after.updatedAt, AT, 'a note still counts as activity');
+  });
+});

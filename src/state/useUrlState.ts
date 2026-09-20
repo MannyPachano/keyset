@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { filtersToParams, openIdFromParams, paramsToFilters } from '../lib/url.js';
+import { filtersToParams, openIdFromParams, paramsToFilters, viewFromParams, type View } from '../lib/url.js';
 import type { Filters } from '../lib/types.js';
 
 /**
@@ -12,15 +12,16 @@ import type { Filters } from '../lib/types.js';
 interface UrlState {
   filters: Filters;
   openId: string | null;
+  view: View;
 }
 
 function read(): UrlState {
   const params = new URLSearchParams(window.location.search);
-  return { filters: paramsToFilters(params), openId: openIdFromParams(params) };
+  return { filters: paramsToFilters(params), openId: openIdFromParams(params), view: viewFromParams(params) };
 }
 
 function write(next: UrlState, replace: boolean): void {
-  const qs = filtersToParams(next.filters, next.openId).toString();
+  const qs = filtersToParams(next.filters, next.openId, next.view).toString();
   const url = `${window.location.pathname}${qs ? `?${qs}` : ''}`;
   if (replace) window.history.replaceState(null, '', url);
   else window.history.pushState(null, '', url);
@@ -71,5 +72,16 @@ export function useUrlState() {
     });
   }, []);
 
-  return { filters: state.filters, openId: state.openId, setFilters, setPage, setOpenId };
+  /** Switching view is a navigation, so it pushes: the back button returns you
+   *  to the list you came from, with the filters you had. */
+  const setView = useCallback((view: View) => {
+    setState((prev) => {
+      if (prev.view === view) return prev;
+      const next = { ...prev, view, openId: null };
+      write(next, false);
+      return next;
+    });
+  }, []);
+
+  return { filters: state.filters, openId: state.openId, view: state.view, setFilters, setPage, setOpenId, setView };
 }

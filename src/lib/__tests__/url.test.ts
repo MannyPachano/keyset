@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { filtersToParams, isUnfiltered, openIdFromParams, paramsToFilters, toSearchString } from '../url.js';
+import { filtersToParams, isUnfiltered, openIdFromParams, paramsToFilters, toSearchString, viewFromParams } from '../url.js';
 import { DEFAULT_FILTERS, type Filters } from '../types.js';
 
 const f = (over: Partial<Filters> = {}): Filters => ({ ...DEFAULT_FILTERS, ...over });
@@ -92,5 +92,26 @@ describe('isUnfiltered', () => {
 
   it('ignores a search box holding only spaces', () => {
     assert.equal(isUnfiltered(f({ q: '   ' })), true);
+  });
+});
+
+describe('the view', () => {
+  it('defaults to the queue, and anything unrecognised falls back to it', () => {
+    assert.equal(viewFromParams(new URLSearchParams('')), 'queue');
+    assert.equal(viewFromParams(new URLSearchParams('view=week')), 'week');
+    assert.equal(viewFromParams(new URLSearchParams('view=gantt')), 'queue');
+  });
+
+  it('writes nothing for the queue and round-trips the board', () => {
+    assert.equal(toSearchString(f(), null, 'queue'), '');
+    assert.equal(viewFromParams(filtersToParams(f(), null, 'week')), 'week');
+  });
+
+  it('keeps the filters alongside the board, so a narrowed board is linkable', () => {
+    const narrowed = f({ propertyId: 'p2', priority: ['emergency'] });
+    const p = filtersToParams(narrowed, null, 'week');
+    assert.equal(viewFromParams(p), 'week');
+    assert.deepEqual(paramsToFilters(p).priority, ['emergency']);
+    assert.equal(paramsToFilters(p).propertyId, 'p2');
   });
 });

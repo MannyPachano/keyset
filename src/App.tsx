@@ -3,7 +3,9 @@ import { getApiOptions, setApiOptions } from './api/mockApi.js';
 import { mutations } from './lib/reducer.js';
 import type { Priority, Status } from './lib/types.js';
 import { Banner } from './components/Banner.js';
+import { DetailPanel } from './components/DetailPanel.js';
 import { QueueView } from './components/QueueView.js';
+import { WeekBoard } from './components/WeekBoard.js';
 import { useDataset } from './state/useDataset.js';
 import { useUrlState } from './state/useUrlState.js';
 
@@ -12,8 +14,8 @@ const OPERATOR = 'Dana Whitfield';
 export function App() {
   // Frozen for the life of the session so ages do not creep while you read.
   const [now] = useState(() => Date.now());
-  const { status, loadError, state, dispatch, rows, mutate, reset, reload } = useDataset(now);
-  const { filters, openId, setFilters, setPage, setOpenId } = useUrlState();
+  const { status, loadError, state, dispatch, rows, index, mutate, reset, reload } = useDataset(now);
+  const { filters, openId, view, setFilters, setPage, setOpenId, setView } = useUrlState();
   const [failing, setFailing] = useState(getApiOptions().failureRate > 0);
 
   const busy = state.pending.length > 0;
@@ -36,6 +38,17 @@ export function App() {
 
   const at = () => new Date().toISOString();
 
+  const openRow = useMemo(() => rows.find((r) => r.request.id === openId) ?? null, [rows, openId]);
+
+  /** The panel acts on one request; the bulk bar acts on the selection. Same
+   *  path through the same reducer, so optimism and rollback behave the same. */
+  const one = useCallback(
+    (label: string, kind: 'status' | 'priority' | 'assign' | 'schedule' | 'note', apply: Parameters<typeof mutate>[3]) => {
+      if (openId) void mutate([openId], label, kind, apply);
+    },
+    [mutate, openId],
+  );
+
   const toggleFailures = () => {
     const next = !failing;
     setFailing(next);
@@ -50,6 +63,11 @@ export function App() {
           <span className="brand-name">Keyset</span>
           <span className="brand-sub">Maintenance desk</span>
         </div>
+
+        <nav className="viewtabs" aria-label="Views">
+          <button type="button" className="viewtab" aria-current={view === 'queue' ? 'page' : undefined} onClick={() => setView('queue')}>Queue</button>
+          <button type="button" className="viewtab" aria-current={view === 'week' ? 'page' : undefined} onClick={() => setView('week')}>This week</button>
+        </nav>
 
         <div className="topbar-actions">
           <button
@@ -79,6 +97,15 @@ export function App() {
           <Banner tone="error" action={{ label: 'Try again', onClick: () => void reload() }}>
             {loadError ?? 'The queue could not be loaded.'}
           </Banner>
+        ) : view === 'week' ? (
+          <WeekBoard
+            rows={rows}
+            filters={filters}
+            now={now}
+            busy={busy}
+            onOpen={setOpenId}
+            onMove={(id, day) => void mutate([id], `Visit moved`, 'schedule', mutations.schedule(day, OPERATOR, at()))}
+          />
         ) : (
           <QueueView
             rows={rows}
@@ -107,6 +134,24 @@ export function App() {
           />
         )}
       </main>
+
+      {openRow && (
+        <DetailPanel
+          row={openRow}
+          index={index}
+          contractors={state.data.contractors}
+          busy={busy}
+          onClose={() => setOpenId(null)}
+          onStatus={(v) => one(`Status set to ${v.replace('_', ' ')}`, 'status', mutations.status(v, OPERATOR, at()))}
+          onPriority={(v) => one(`Priority set to ${v}`, 'priority', mutations.priority(v, OPERATOR, at()))}
+          onAssign={(id) => {
+            const name = state.data.contractors.find((c) => c.id === id)?.name ?? '';
+            one(id ? `Assigned to ${name}` : 'Contractor removed', 'assign', mutations.assign(id, name, OPERATOR, at()));
+          }}
+          onSchedule={(day) => one(day ? 'Visit booked' : 'Visit unbooked', 'schedule', mutations.schedule(day, OPERATOR, at()))}
+          onNote={(text) => one('Note added', 'note', mutations.note(text, OPERATOR, at()))}
+        />
+      )}
 
       {/* Bulk results are announced here rather than shown as a toast that a
           screen reader would miss or read at the wrong moment. */}

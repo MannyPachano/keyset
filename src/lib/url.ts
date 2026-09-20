@@ -7,8 +7,9 @@ const SORT_KEYS: SortKey[] = ['ref', 'property', 'unit', 'title', 'priority', 's
  *  can then be bookmarked, pasted to a colleague, and survives a reload or a
  *  back button, which is the behaviour people expect from a list they have
  *  spent thirty seconds narrowing. */
-export function filtersToParams(f: Filters, openId?: string | null): URLSearchParams {
+export function filtersToParams(f: Filters, openId?: string | null, view: View = 'queue'): URLSearchParams {
   const p = new URLSearchParams();
+  if (view === 'week') p.set('view', view);
   if (f.q.trim()) p.set('q', f.q.trim());
   if (f.status.length) p.set('status', f.status.join(','));
   if (f.priority.length) p.set('priority', f.priority.join(','));
@@ -64,6 +65,15 @@ export function openIdFromParams(p: URLSearchParams): string | null {
   return p.get('request') || null;
 }
 
+export type View = 'queue' | 'week';
+
+/** The board is a different address, not a different piece of component state,
+ *  so a link can point at either one. Anything unrecognised falls back to the
+ *  queue rather than rendering nothing. */
+export function viewFromParams(p: URLSearchParams): View {
+  return p.get('view') === 'week' ? 'week' : 'queue';
+}
+
 /** True when nothing is narrowing the list. Drives which empty state to show:
  *  "no requests yet" is a different message from "nothing matches these filters",
  *  and showing the wrong one is the usual bug. */
@@ -72,7 +82,7 @@ export function isUnfiltered(f: Filters): boolean {
     && !f.propertyId && f.assignment === 'any' && !f.overdueOnly && !f.includeClosed;
 }
 
-export function toSearchString(f: Filters, openId?: string | null): string {
-  const s = filtersToParams(f, openId).toString();
+export function toSearchString(f: Filters, openId?: string | null, view: View = 'queue'): string {
+  const s = filtersToParams(f, openId, view).toString();
   return s ? `?${s}` : '';
 }
