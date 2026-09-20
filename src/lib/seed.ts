@@ -1,4 +1,4 @@
-import { CATEGORIES, PRIORITIES, type Category, type Dataset, type MaintenanceRequest,
+import { CATEGORIES, type Category, type Dataset, type MaintenanceRequest,
          type Priority, type RequestEvent, type Status } from './types.js';
 
 /** Deterministic PRNG, so every visitor sees the same demo and the tests are

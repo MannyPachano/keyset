@@ -20,6 +20,10 @@ export interface State {
   lastError: string | null;
   /** Text handed to the live region, so bulk results are announced. */
   announcement: string;
+  /** What the last successful change touched. A bulk action can move rows out
+   *  of the view that triggered it, and rows silently disappearing is the most
+   *  disorienting thing a queue can do. The view uses this to say so. */
+  lastResult: { label: string; requestIds: string[] } | null;
 }
 
 export type Action =
@@ -31,10 +35,11 @@ export type Action =
   | { type: 'mutateOk'; id: string }
   | { type: 'mutateFail'; id: string; message: string }
   | { type: 'dismissError' }
+  | { type: 'dismissResult' }
   | { type: 'reset'; data: Dataset };
 
 export function initialState(data: Dataset): State {
-  return { data, selected: new Set(), anchorId: null, pending: [], lastError: null, announcement: '' };
+  return { data, selected: new Set(), anchorId: null, pending: [], lastError: null, announcement: '', lastResult: null };
 }
 
 export function reducer(state: State, action: Action): State {
@@ -79,6 +84,7 @@ export function reducer(state: State, action: Action): State {
         data: { ...state.data, requests },
         pending: [...state.pending, action.mutation],
         lastError: null,
+        lastResult: null,
       };
     }
 
@@ -88,6 +94,7 @@ export function reducer(state: State, action: Action): State {
         ...state,
         pending: state.pending.filter((m) => m.id !== action.id),
         announcement: done ? `${done.label}. ${count(done.requestIds.length)} updated.` : state.announcement,
+        lastResult: done ? { label: done.label, requestIds: done.requestIds } : state.lastResult,
       };
     }
 
@@ -103,11 +110,15 @@ export function reducer(state: State, action: Action): State {
         pending: state.pending.filter((m) => m.id !== action.id),
         lastError: action.message,
         announcement: `${failed.label} failed. ${count(failed.requestIds.length)} put back.`,
+        lastResult: null,
       };
     }
 
     case 'dismissError':
       return { ...state, lastError: null };
+
+    case 'dismissResult':
+      return { ...state, lastResult: null };
 
     case 'reset':
       return initialState(action.data);

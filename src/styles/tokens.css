@@ -1,0 +1,91 @@
+/* Theme tokens. Light is the default; /theme.js sets data-theme on <html>
+   before the first paint. Same rule as anywhere: --on-* colours are literal and
+   do not flip, everything else is semantic and does. */
+:root {
+  color-scheme: light;
+
+  --page: #f6f7f9;
+  --surface: #ffffff;
+  --surface-alt: #f1f3f5;
+  --surface-sunken: #eceff2;
+  --line: #dfe3e8;
+  --line-strong: #c6ccd4;
+
+  --text: #16191d;
+  --text-muted: #565f6a;
+  --text-faint: #79828d;
+
+  --accent: #1d4ed8;
+  --accent-hover: #1a44bd;
+  --accent-soft: #e8eefc;
+  --on-accent: #ffffff;
+
+  --danger: #b42318;
+  --danger-soft: #fdeceb;
+  --warn: #a15c07;
+  --warn-soft: #fdf3e3;
+  --ok: #17663f;
+  --ok-soft: #e7f5ed;
+  --info: #175cd3;
+  --info-soft: #e8f1fd;
+  --neutral-soft: #eef0f3;
+
+  --focus: #1d4ed8;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
+  --shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.1), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-lg: 0 20px 24px -4px rgba(16, 24, 40, 0.1), 0 8px 8px -4px rgba(16, 24, 40, 0.04);
+
+  --radius: 8px;
+  --radius-sm: 6px;
+  --row-height: 52px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --page: #101318;
+  --surface: #181c22;
+  --surface-alt: #1e232a;
+  --surface-sunken: #14181d;
+  --line: #2a313a;
+  --line-strong: #3b444f;
+
+  --text: #e9edf2;
+  --text-muted: #a8b2be;
+  --text-faint: #7c8694;
+
+  --accent: #5b8def;
+  --accent-hover: #74a0f3;
+  --accent-soft: #1b2740;
+  --on-accent: #0b1220;
+
+  --danger: #f97066;
+  --danger-soft: #341b1a;
+  --warn: #f5b544;
+  --warn-soft: #33270f;
+  --ok: #4ec38a;
+  --ok-soft: #10281d;
+  --info: #7cb0f7;
+  --info-soft: #14243c;
+  --neutral-soft: #232932;
+
+  --focus: #7cb0f7;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 20px 28px rgba(0, 0, 0, 0.55);
+}
+
+/* Priority and status live on their own scale, because a person scanning the
+   queue reads colour before they read the word. */
+:root {
+  --priority-emergency: var(--danger);
+  --priority-emergency-soft: var(--danger-soft);
+  --priority-urgent: var(--warn);
+  --priority-urgent-soft: var(--warn-soft);
+  --priority-routine: var(--text-faint);
+  --priority-routine-soft: var(--neutral-soft);
+}

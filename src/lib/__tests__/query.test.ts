@@ -181,6 +181,22 @@ describe('statusCounts', () => {
     assert.equal(counts.done, 1);
   });
 
+  it('reports what clicking a closed status would show, not what the view holds', () => {
+    // The default view hides finished work, but clicking "Done" overrides that.
+    // If the chip said 0 while the click produced 35 rows, the count is a lie.
+    const rows = rowsOf([
+      make({ status: 'new' }), make({ status: 'new' }),
+      make({ status: 'done' }), make({ status: 'done' }), make({ status: 'done' }),
+      make({ status: 'cancelled' }),
+    ]);
+    const counts = statusCounts(rows, f());
+    assert.equal(counts.new, 2);
+    assert.equal(counts.done, 3, 'the Done chip must not read 0 in the default view');
+    assert.equal(counts.cancelled, 1);
+    // And the count matches what the click actually returns.
+    assert.equal(applyFilters(rows, f({ status: ['done'] })).length, counts.done);
+  });
+
   it('can still count a closed status the default view would hide', () => {
     const rows = rowsOf([make({ status: 'new' }), make({ status: 'done' }), make({ status: 'cancelled' })]);
     const counts = statusCounts(rows, f({ includeClosed: true }));

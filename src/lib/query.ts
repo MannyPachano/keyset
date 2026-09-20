@@ -1,4 +1,4 @@
-import { ageMs, isClosed, isOverdue } from './dates.js';
+import { ageMs, isClosed, isOverdue, slaProgress } from './dates.js';
 import { PAGE_SIZE, type Dataset, type Filters, type MaintenanceRequest, type Priority, type Sort } from './types.js';
 
 /** Lookup tables built once, so filtering and sorting never do a linear scan
@@ -29,6 +29,8 @@ export interface Row {
   contractorName: string;
   ageMs: number;
   overdue: boolean;
+  /** Fraction of the deadline used. 1 is exactly due, above 1 is late. */
+  sla: number;
 }
 
 export function toRow(req: MaintenanceRequest, ix: Index, now: number): Row {
@@ -43,6 +45,7 @@ export function toRow(req: MaintenanceRequest, ix: Index, now: number): Row {
     contractorName: req.contractorId ? ix.contractor.get(req.contractorId) ?? '' : '',
     ageMs: ageMs(req, now),
     overdue: isOverdue(req, now),
+    sla: slaProgress(req, now),
   };
 }
 
@@ -145,9 +148,13 @@ export function queryRows(all: Row[], f: Filters, size = PAGE_SIZE): Page {
 }
 
 /** Counts for the filter chips, computed against everything except the filter
- *  being counted, so a count never reads zero for the option you are looking at. */
+ *  being counted, so a count never reads zero for the option you are looking at.
+ *
+ *  includeClosed is forced on here for the same reason. Clicking "Done"
+ *  overrides the hide-closed rule, so the count has to be what that click would
+ *  actually produce, not what the current view contains. */
 export function statusCounts(rows: Row[], f: Filters): Record<string, number> {
-  const base = applyFilters(rows, { ...f, status: [] });
+  const base = applyFilters(rows, { ...f, status: [], includeClosed: true });
   const out: Record<string, number> = {};
   for (const row of base) out[row.request.status] = (out[row.request.status] ?? 0) + 1;
   return out;

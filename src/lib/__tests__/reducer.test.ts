@@ -132,6 +132,32 @@ describe('optimistic mutation', () => {
     assert.equal(s.pending.length, 1);
   });
 
+  it('records what a successful change touched, so the view can say where the rows went', () => {
+    let s = base();
+    s = reducer(s, { type: 'mutateStart', mutation: pending({ requestIds: ['a', 'b'], previous: [], label: 'Marked cancelled' }), apply: mutations.status('cancelled', 'Dana', AT) });
+    assert.equal(s.lastResult, null, 'nothing is recorded until it has actually saved');
+    s = reducer(s, { type: 'mutateOk', id: 'm1' });
+    assert.deepEqual(s.lastResult, { label: 'Marked cancelled', requestIds: ['a', 'b'] });
+  });
+
+  it('records nothing when the change failed, because nothing moved', () => {
+    let s = base();
+    s = reducer(s, { type: 'mutateStart', mutation: pending({ requestIds: ['a'], previous: [{ ...base().data.requests[0] }] }), apply: mutations.status('done', 'Dana', AT) });
+    s = reducer(s, { type: 'mutateFail', id: 'm1', message: 'nope' });
+    assert.equal(s.lastResult, null);
+  });
+
+  it('drops the previous result when a new change starts, and on dismiss', () => {
+    let s = base();
+    s = reducer(s, { type: 'mutateStart', mutation: pending({ requestIds: ['a'], previous: [] }), apply: mutations.status('done', 'Dana', AT) });
+    s = reducer(s, { type: 'mutateOk', id: 'm1' });
+    assert.ok(s.lastResult);
+    s = reducer(s, { type: 'mutateStart', mutation: pending({ id: 'm2', requestIds: ['b'], previous: [] }), apply: mutations.status('done', 'Dana', AT) });
+    assert.equal(s.lastResult, null, 'a stale banner must not survive into the next action');
+    s = reducer(s, { type: 'mutateOk', id: 'm2' });
+    assert.equal(reducer(s, { type: 'dismissResult' }).lastResult, null);
+  });
+
   it('clears the error banner on demand and on the next attempt', () => {
     let s = reducer(base(), { type: 'mutateFail', id: 'missing', message: 'boom' });
     assert.equal(s.lastError, 'boom');
