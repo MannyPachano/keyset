@@ -38,12 +38,24 @@ export function DetailPanel(props: Props) {
 
   /* Focus moves into the panel when it opens and goes back to the row that
      opened it when it closes. Without the second half, closing the panel drops
-     a keyboard user at the top of the document and they have to tab back. */
+     a keyboard user at the top of the document and they have to tab back.
+
+     There is not always a row that opened it. A request can be reached by its
+     own URL, from a link someone was sent, and then the panel is the first
+     thing on the page: document.activeElement is the body, focusing it does
+     nothing, and closing lands the reader on nothing at all. So the fallbacks
+     are the row the request belongs to, and the page itself if that row has
+     since been filtered out of the list. */
   useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
+    const id = r.id;
+    const active = document.activeElement as HTMLElement | null;
+    const opener = active && active !== document.body && active !== document.documentElement ? active : null;
     panel.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
     return () => {
-      if (opener && document.contains(opener)) opener.focus();
+      if (opener && document.contains(opener)) { opener.focus(); return; }
+      const row = document.querySelector<HTMLElement>(`[data-ref-for="${id}"]`);
+      if (row) { row.focus(); return; }
+      document.querySelector<HTMLElement>('main')?.focus();
     };
   }, [r.id]);
 

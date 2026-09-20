@@ -145,7 +145,7 @@ export function WeekBoard({ rows, filters, now, busy, onMove, onOpen }: Props) {
                           onDoubleClick={() => onOpen(req.id)}
                         >
                           <div className="board-card-top">
-                            <button type="button" className="ref-link" onClick={() => onOpen(req.id)}>{req.ref}</button>
+                            <button type="button" className="ref-link" data-ref-for={req.id} onClick={() => onOpen(req.id)}>{req.ref}</button>
                             <PriorityPill priority={req.priority} />
                           </div>
                           <p className="board-card-title">{req.title}</p>

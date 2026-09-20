@@ -86,7 +86,14 @@ export function App() {
         </div>
       </header>
 
-      <main className="main" id="main">
+      <main className="main" id="main" tabIndex={-1}>
+        {/* A screen reader jumping by heading needs the page to say what it is,
+            and it is two different pages depending on the tab. The brand in the
+            top bar cannot do that job: it never changes. */}
+        <h1 className="visually-hidden">
+          {view === 'week' ? "This week's visits" : 'Maintenance queue'}
+        </h1>
+
         {state.lastError && (
           <Banner tone="error" onDismiss={() => dispatch({ type: 'dismissError' })}>
             {state.lastError}

@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": false,
@@ -13,8 +17,16 @@
     "noImplicitOverride": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["vitest/globals", "@testing-library/jest-dom"]
+    "types": [
+      "vitest/globals",
+      "@testing-library/jest-dom"
+    ]
   },
-  "include": ["src"],
-  "exclude": ["src/lib/__tests__"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/lib/__tests__",
+    "e2e"
+  ]
 }

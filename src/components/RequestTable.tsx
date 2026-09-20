@@ -110,7 +110,7 @@ function RequestRow({ row, checked, isOpen, onSelect, onOpen }: RowProps) {
         />
       </td>
       <td className="col-ref">
-        <button type="button" className="ref-link" onClick={() => onOpen(r.id)} aria-expanded={isOpen}>
+        <button type="button" className="ref-link" data-ref-for={r.id} onClick={() => onOpen(r.id)} aria-expanded={isOpen}>
           {r.ref}
         </button>
       </td>

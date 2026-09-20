@@ -7,3 +7,7 @@ playwright-report
 test-results
 .DS_Store
 *.local
+
+# local test output and incremental build caches, not committed
+vitest-out.txt
+*.tsbuildinfo
