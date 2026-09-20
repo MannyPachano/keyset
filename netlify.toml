@@ -1,0 +1,41 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Nothing in this app routes on the path: the open request and the current view
+# both live in the query string, so there is no SPA rewrite here. A catch-all
+# would only hide real 404s.
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # script-src stays at 'self' with no unsafe-inline, which is the reason
+    # theme.js is a file in public/ rather than an inline script in the head.
+    # style-src has to allow attributes because the SLA bar sets its own width,
+    # and a style attribute counts as inline. No <style> block is ever emitted.
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    # Matches the portfolio's posture: these exist to be shown to people who
+    # were sent the link, not to be found in search. Delete this line to change that.
+    X-Robots-Tag = "noindex"
+
+# Vite fingerprints everything under /assets, so those files never change
+# meaning and can be cached forever.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# theme.js has a fixed name because it has to be referenced before the bundle
+# exists, so it gets a short cache instead.
+[[headers]]
+  for = "/theme.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
