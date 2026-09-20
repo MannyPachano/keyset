@@ -104,6 +104,29 @@ test('every control is big enough to hit with a thumb', async ({ page }) => {
   expect(tooSmall.map((s) => `${s.w}x${s.h} ${s.label}`), 'controls below the WCAG 2.2 minimum').toEqual([]);
 });
 
+test('nothing in a row covers anything else at phone width', async ({ page }) => {
+  await page.setViewportSize(PHONE);
+  await ready(page);
+
+  /* The card layout takes a table row out of flow to put the checkbox in the
+     corner. A width rule meant for the cell outranked that once and stretched
+     it across the whole card, landing it on top of the reference. Every
+     automated check passed, because nothing about it is invalid: it is just
+     unreadable. So this measures the boxes instead. */
+  const covered = await page.$$eval('tbody tr', (rows) =>
+    rows.slice(0, 6).flatMap((row) => {
+      const link = row.querySelector('.ref-link');
+      const check = row.querySelector('input[type="checkbox"]');
+      if (!link || !check) return [];
+      const a = check.getBoundingClientRect();
+      const b = link.getBoundingClientRect();
+      const hit = a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+      return hit ? [link.textContent ?? '?'] : [];
+    }),
+  );
+  expect(covered, 'the checkbox is sitting on top of the reference').toEqual([]);
+});
+
 test('the page says what it is, once, at the top', async ({ page }) => {
   await ready(page);
   /* Landmarks alone leave a screen reader with no title for the page. */

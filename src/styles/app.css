@@ -256,7 +256,16 @@ body {
   .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
   .row { border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 0.625rem; padding: 0.5rem 0.75rem 0.75rem; position: relative; }
   .table td { padding: 0.2rem 0; }
-  .col-check { position: absolute; top: 0.6rem; right: 0.6rem; width: auto; }
+  /* Both the element and the class, because `.table td` sets width:100% for
+     the card layout and outranks a bare `.col-check`. It won: the cell
+     stretched the full width of the card and dropped the checkbox on top of
+     the reference. Nothing was invalid, so every automated check passed. */
+  .table td.col-check { position: absolute; top: 0.6rem; right: 0.6rem; width: auto; }
+
+  /* The overdue marker is an edge on the reference cell in the table. Once the
+     row is a card, that edge belongs to the card. */
+  .row.is-overdue .col-ref { box-shadow: none; }
+  .row.is-overdue { box-shadow: inset 3px 0 0 var(--danger); }
   .col-num { text-align: left; }
   .sla { margin-left: 0; }
   .filters-clear { margin-left: 0; }
